@@ -12,6 +12,7 @@ model.eval()
 print("You are now chatting with your model. Type 'exit' to stop.\n")
 
 chat_history = ""
+inserted_content = 2
 
 while True:
     user_input = input("You: ")
@@ -19,7 +20,8 @@ while True:
         break
 
     # Append to chat history
-    chat_history += f"<|user|>: {user_input}\n<|friend|>:"
+    chat_history += f"<|me|>: {user_input}\n<|friend|>:"
+    # print(f" inserting into model: {chat_history}")
 
     # Tokenize and create attention mask
     input_ids = tokenizer.encode(chat_history, return_tensors="pt").to(device)
@@ -39,17 +41,16 @@ while True:
         eos_token_id=tokenizer.eos_token_id
     )
 
-    # Decode only the newly generated part
-    full_output = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    # Initialize variables
+    raw_output = tokenizer.decode(output_ids[0], skip_special_tokens=True).split("\n")
 
-    # Extract just the reply after "<|friend|>:"
-    reply_start = full_output.rfind("<|friend|>:")
-    if reply_start != -1:
-        generated_reply = full_output[reply_start + len("<|friend|>:"):].split("<|user|>")[0].strip()
-    else:
-        generated_reply = "[no response]"
+    # print(raw_output[:inserted_content])
+    output = raw_output[:inserted_content]
+    output[-1] = output[-1] + "\n"
+    print(f"Model: {output[-1].split(': ')[1]}")
 
-    print(f"Friend: {generated_reply}")
+    inserted_content += 2
 
-    # Update chat history with the reply
-    chat_history += f" {generated_reply}\n"
+
+    chat_history = "\n".join(output)
+    # print("chat history is now:\n", chat_history)
